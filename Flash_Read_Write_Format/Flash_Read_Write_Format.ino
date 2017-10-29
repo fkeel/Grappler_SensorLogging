@@ -17,6 +17,7 @@
 #include <SerialFlash.h>
 #include <SPI.h>
 const int FlashChipSelect = 6; // digital pin for flash chip CS pin
+const int fileSize = 6;
 SerialFlashFile file; //Working file
 
 
@@ -48,9 +49,9 @@ void setup()
   Serial.println("... so far, so good");
   Serial.println("");
   Serial.println("Now the testing begins, uncomment any of the functions at the end of the setup function, to create files, read from them and reformat the Flash memory");
-  // clearFlash();  //Use this to reformat the Flash chip... this holds the program in a while loop when done.
-  // createFile();  //This creates a test file IF it doesn't exist
-  // readFile();    //this reads the test file
+   // clearFlash();  //Use this to reformat the Flash chip... this holds the program in a while loop when done.
+   createFile();  //This creates a test file IF it doesn't exist
+   readFile();    //this reads the test file
 
 
 }
@@ -63,8 +64,8 @@ void loop() {
 //this file will be written to flash memory//
 /////////////////////////////////////////////
 
-char dataToWrite[3] = {
-  64, 22, 10
+uint16_t dataToWrite[3] = {
+  1164, 222, 1010
 };
 
 
@@ -75,6 +76,7 @@ char dataToWrite[3] = {
 
 void clearFlash( void )
 {
+  Serial.println("");
   Serial.print("Erasing flash");
   SerialFlash.eraseAll();
   while (SerialFlash.ready() == false)
@@ -96,11 +98,12 @@ void clearFlash( void )
 
 void createFile( void )
 {
+  Serial.println("");
   //Check if file exists, if not, create it.
   if (SerialFlash.exists("testfile.dat") == 0)
   {
     //File doesn't exist
-    if (SerialFlash.create("testfile.dat", 3) == true)
+    if (SerialFlash.create("testfile.dat", fileSize) == true)
     {
       Serial.println("Created testfile.dat");
     }
@@ -114,26 +117,39 @@ void createFile( void )
     Serial.println("File Exists, trying to open...");
     file = SerialFlash.open("testfile.dat");
     if (file)
-    { Serial.println("Yay, something worked");
-      Serial.println("File Exists, trying to open...");
-      file = SerialFlash.open("testfile.dat");
-      if (file)
-      { // true if the file exists
-        Serial.println("testfile.dat opened");
-        uint8_t buffer[3];
+    {
+      // true if the file exists
+      Serial.println("testfile.dat opened");
+      uint8_t buffer[fileSize];
 
-        buffer[0] = dataToWrite[0];
-        buffer[1] = dataToWrite[1];
-        buffer[2] = dataToWrite[2];
-        //IF YOU WANT TO WRITE TO ANOTHER POSITION IN THE FILE, USE "file.seek();"
-        //IF YOU WANT TO CHECK YOUR CURRENT POSITION, USE "file.position()"
-        file.write(buffer, 3);
-        Serial.print(".");
-      }
-      else
-      {
-        Serial.println("testfile.dat not opened!!!");
-      }
+      buffer[0] = 11;
+      Serial.print("add ");
+      Serial.println(buffer[0]);
+      buffer[1] = 12;
+      Serial.print("add ");
+      Serial.println(buffer[1]);
+      buffer[2] = 13;
+        Serial.print("add ");
+      Serial.println(buffer[2]);
+      buffer[3] = 14;
+        Serial.print("add ");
+      Serial.println(buffer[3]);
+      buffer[4] = highByte(dataToWrite[2]);
+        Serial.print("add ");
+      Serial.println(buffer[4]);
+      buffer[5] = lowByte(dataToWrite[2]);
+        Serial.print("add ");
+      Serial.println(buffer[5]);
+      Serial.print("Writing Data to File ...");
+      //IF YOU WANT TO WRITE TO ANOTHER POSITION IN THE FILE, USE "file.seek();"
+      //IF YOU WANT TO CHECK YOUR CURRENT POSITION, USE "file.position()"
+      
+      file.write(buffer, 0);
+      Serial.println("... completed");
+    }
+    else
+    {
+      Serial.println("testfile.dat not opened!!!");
     }
   }
 }
@@ -145,19 +161,26 @@ void createFile( void )
 ///////////////////////////////////////////
 
 void readFile( void )
-{
+{ 
+  Serial.println("");
   file = SerialFlash.open("testfile.dat");
   Serial.println("file opened");
   if (file)
   { // true if the file exists
     Serial.println("testfile.dat opened");
-    uint8_t buffer[3];
+    int buffer[fileSize];
     //IF YOU WANT TO READ FROM ANOTHER POSITION IN THE FILE, USE "file.seek();"
     //IF YOU WANT TO CHECK YOUR CURRENT POSITION, USE "file.position()"
-    file.read(buffer, 3);
+    Serial.print("Position: ");
+    Serial.println(file.position());
+    file.read(buffer, fileSize);
+    Serial.println(file.position());
     Serial.println(buffer[0]);
     Serial.println(buffer[1]);
     Serial.println(buffer[2]);
+    Serial.println(buffer[3]);
+    Serial.println(buffer[4]);
+    Serial.println(buffer[5]);
 
     file.close();
   }
